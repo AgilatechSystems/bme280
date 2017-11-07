@@ -1,0 +1,24 @@
+{
+  "name": "@agilatech/bme280",
+  "version": "0.8.0",
+  "description": "Driver for the BME280 Pressure/Temperature/Humidity Sensor",
+  "main": "./build/Release/bme280",
+  "gypfile": true,
+  "scripts": {
+    "install": "node-gyp rebuild"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Agilatech/bme280.git"
+  },
+  "keywords": [
+    "Bosch",
+    "BME280",
+    "Barometric",
+    "Pressure",
+    "Temperature",
+    "Humidity"
+  ],
+  "author": "Scott Erholm <scott@agilatech.com>",
+  "license": "MIT"
+}
