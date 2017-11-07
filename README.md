@@ -1,8 +1,8 @@
-##Node addon for hardware BME280 sensor
+## Node addon for hardware BME280 sensor
 
-#####This addon should work on any Linux platform, and has been thoroughly tested on BBB
+##### This addon should work on any Linux platform, and has been thoroughly tested on BBB
 
-###Install
+### Install
 
 ```
 npm install @agilatech/bme280
@@ -13,8 +13,8 @@ git clone https://github.com/Agilatech/bme280.git
 node-gyp configure build
 ```
 
-###Usage
-#####Load the module and create an instance
+### Usage
+##### Load the module and create an instance
 ```
 const addon = require('@agilatech/bme280');
 
@@ -32,7 +32,7 @@ Device address can be specified in the third argument
 // You can change it if you think you should.
 const bme280 = new addon.Bme280('/dev/i2c-1', 1250, 0x77);
 ```
-#####Get basic device info
+##### Get basic device info
 ```
 const name = bme280.deviceName();  // returns string with name of device
 const type = bme280.deviceType();  // returns string with type of device
@@ -40,7 +40,7 @@ const version = bme280.deviceVersion(); // returns this software version
 const active = bme280.deviceActive(); // true if active, false if inactive
 const numVals =  bme280.deviceNumValues(); // returns the number of paramters sensed
 ```
-####Get parameter info and values
+#### Get parameter info and values
 Sensed parameter values are at separate indicies.  The reasoning here is to support a generic sensor platform.
 ```
 // pressure is at index 0
@@ -63,7 +63,7 @@ const paramVal2  = bme280.valueAtIndexSync(2);
 If the device is not active, or if any paramter is disabled, the return value will be "none".
 
 
-####Asynchronous value collection is also available for all indicies.
+#### Asynchronous value collection is also available for all indicies.
 ```
 bme280.valueAtIndex(0, function(err, val) {
     if (err) {
@@ -75,7 +75,7 @@ bme280.valueAtIndex(0, function(err, val) {
 });
 ```
 
-###Operation Notes
+### Operation Notes
 This driver is specific to the BME280 pressure, temperature, and humidity sensor manufactured by Bosch. This **is NOT**
 for the similar BMP280 and will not work with that.
 
@@ -101,11 +101,11 @@ This driver is missing several features which could improve its functionality.  
 3. Ability to select parameter fluctuation filtering coefficients
 4. Altimeter function
 
-###Dependencies
+### Dependencies
 * node-gyp is used to configure and build the driver
 
 
-###Copyright
+### Copyright
 Copyright © 2017 Agilatech. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
