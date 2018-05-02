@@ -1,6 +1,6 @@
 {
   "name": "@agilatech/bme280",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Driver for the BME280 Pressure/Temperature/Humidity Sensor",
   "main": "./build/Release/bme280",
   "gypfile": true,
