@@ -21,7 +21,7 @@ const addon = require('@agilatech/bme280');
 // create an instance on the /dev/i2c-1 I2C device file
 const bme280 = new addon.Bme280('/dev/i2c-1');
 ```
-Unless you're at sea level, specify elevation in a second argument
+Unless you're at sea level, specify elevation in metres in a second argument
 ```
 // The second optional constructor argument is station elevation.
 const bme280 = new addon.Bme280('/dev/i2c-1', 1250);
@@ -60,7 +60,7 @@ const paramName2 = bme280.nameAtIndex(2);
 const paramType2 = bme280.typeAtIndex(2);
 const paramVal2  = bme280.valueAtIndexSync(2);
 ```
-If the device is not active, or if any paramter is disabled, the return value will be "none".
+If the device is not active, or if any parameter is disabled, the return value will be "none".
 
 
 #### Asynchronous value collection is also available for all indicies.
@@ -84,7 +84,7 @@ The measured pressure range is from 300hPa to 1100hPa, while the measured temper
 
 Atmospheric pressure is directly related to elevation (altitude), so this software compensates for elevation and
 reports the result as if the sensor were at sea level. This removes the effect of station elevation on the reported
-pressure. For this reason it is very important to specify the station elevation in the addon constructor.  Failure
+pressure. For this reason it is very important to specify the station elevation (metres) in the addon constructor.  Failure
 to specify elevation will default to 0, thus returning "none" or a wildly inaccurate pressure value for elevations
 above sea level.
 
@@ -106,7 +106,7 @@ This driver is missing several features which could improve its functionality.  
 
 
 ### Copyright
-Copyright © 2017 Agilatech. All Rights Reserved.
+Copyright © 2017-2018 Agilatech. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
