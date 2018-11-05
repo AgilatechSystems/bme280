@@ -1,108 +1,150 @@
-## Node addon for hardware BME280 sensor
+## Driver for BME280 sensor
 
-##### This addon should work on any Linux platform, and has been thoroughly tested on BBB
+##### This driver should work on any Linux platform, and has been thoroughly tested on BBB and RPi
 
 ### Install
-
 ```
 npm install @agilatech/bme280
-```
-OR
-```
-git clone https://github.com/Agilatech/bme280.git
-node-gyp configure build
 ```
 
 ### Usage
 ##### Load the module and create an instance
 ```
-const addon = require('@agilatech/bme280');
+const Bme280 = require('@agilatech/bme280');
+const bme280 = new Bme280();
+// creates an driver with all default options, including i2c-1 bus at 0x76 address, 
+// and forced mode at sea level operation
 
-// create an instance on the /dev/i2c-1 I2C device file
-const bme280 = new addon.Bme280('/dev/i2c-1');
+if (bme280.isActive()) {
+    bme280.getDataFromDevice((err) => {
+        if (!err) {
+            const pressure    = bme280.device.parameters[0].value;
+            const tempurature = bme280.device.parameters[1].value;
+            const humidity    = bme280.device.parameters[2].value;
+        }
+    });
+}
 ```
-Unless you're at sea level, specify elevation in metres in a second argument
+
+**Options**
 ```
-// The second optional constructor argument is station elevation.
-const bme280 = new addon.Bme280('/dev/i2c-1', 1250);
+Bme280([options])
 ```
-Device address can be specified in the third argument
-```
-// Usually the device is found at 0x76, so that is the default.
-// You can change it if you think you should.
-const bme280 = new addon.Bme280('/dev/i2c-1', 1250, 0x77);
-```
-##### Get basic device info
+The constructor can be supplied with options to specify certain driver characteristics. The options object allows the following parameters:
+* bus : The number of the I2C bus. The number 1 indicates '/dev/i2c-1'. Defaults to 1.
+* addr : The device address on the bus. Defaults to 0x76
+* name : The name given to this particular driver instance. Defaults to 'Bme280'.
+* type : The type given to this particular driver instance. Defaults to 'sensor'.
+* elevation : The elevation in meters of the sensor. Used to adjust absolute pressure relative to sea-level. Defaults to 0 (sea level).
+* mode : The device can be placed in one of three modes, sleep, forced, or normal. 'normal' takes a reading periodically, while 'forced' requires a poll event to take a measurement.  Defaults to 'forced', as that is the most efficient and typical for weather measurement.
+* refresh: A time period in milliseconds during which a new reading will not be requested from the hardware device. Defaults to 10000 (10 seconds).
+
+
+Most options are fairly self-explanitory, but these require further explanation:
+
+##### elevation
+Atmospheric pressure is directly related to elevation (altitude), so this software compensates for elevation and reports the result as if the sensor were at sea level. This removes the effect of station elevation on the reported pressure. For this reason it is very important to specify the station elevation (metres) in the options argument.  Failure to specify elevation will default to 0, thus returning a wildly inaccurate pressure value for elevations above sea level.
+
+##### mode
+'sleep' allows the hardware to consume almost no power, but requires the device to be placed into 'forced' or 'normal' mode before a measurement can be taken. In 'normal' mode, the device takes measurement and then goes into standby for 250ms before another measument is taken. In forced mode, the device takes a messurment, and then goes into sleep mode. The device must be put back into forced mode before another measusment can be taken. In practice, this driver automatically handles sleep and forced modes, and so this parameter can safely be ignored unless power usage needs to be strictly controlled.
+
+##### refresh
+Since all three measurements are taken at the same time, it does not make much sense to request a humidity value, and then 0.5 seconds later request a temperature value. For this reason, the refresh option allows for a time period for which the hardware device itself will not be polled for new values. This makes sense particularly in a weather station application, where the pressure, temperature, and humidty do not channge very often.
+
+### Get basice device info
 ```
 const name = bme280.deviceName();  // returns string with name of device
 const type = bme280.deviceType();  // returns string with type of device
-const version = bme280.deviceVersion(); // returns this software version
-const active = bme280.deviceActive(); // true if active, false if inactive
+const version = bme280.deviceVersion(); // returns this driver software version
+const active = bme280.deviceActive(); // true if initialized and acgtive, false if inactive
 const numVals =  bme280.deviceNumValues(); // returns the number of paramters sensed
 ```
-#### Get parameter info and values
-Sensed parameter values are at separate indicies.  The reasoning here is to support a generic sensor platform.
-```
-// pressure is at index 0
-const paramName0 = bme280.nameAtIndex(0);
-const paramType0 = bme280.typeAtIndex(0);
-const paramVal0  = bme280.valueAtIndexSync(0);
-```
-```
-// temperature is at index 1
-const paramName1 = bme280.nameAtIndex(1);
-const paramType1 = bme280.typeAtIndex(1);
-const paramVal1  = bme280.valueAtIndexSync(1);
-```
-```
-// humidity is at index 2
-const paramName2 = bme280.nameAtIndex(2);
-const paramType2 = bme280.typeAtIndex(2);
-const paramVal2  = bme280.valueAtIndexSync(2);
-```
-If the device is not active, or if any parameter is disabled, the return value will be "none".
 
-
-#### Asynchronous value collection is also available for all indicies.
+### Take measurement and load results in device object
 ```
-bme280.valueAtIndex(0, function(err, val) {
-    if (err) {
-        console.log(err);
+Bme280.getDataFromDevice(callback)
+```
+Asyncronously polls the device, stores the results in the device parameters object, and then calls the optional callback. The given callback function takes an error paramter through which to report errors.  Upon completion, the device object may be examined for new values.
+
+```
+Bme280.getDataFromDeviceSync()
+```
+Synchronously polls the device, stores the results in the device parameters object, returning true on success and false on failure.
+
+#### device object
+The Bme280.device object contains basic information about the device itself, and also the 'parameters' array. The 'parameters' array contains the name, data type, and current value of each parameter for the device.
+```
+Bme280.device.parameters[0] = {
+    name: 'pressure',
+    type: 'float',
+    value: <current pressure in hPa>
     }
-    else {
-        console.log(`Asynchronous call return: ${val}`);
+
+Bme280.device.parameters[1] = {
+    name: 'temperature',
+    type: 'float',
+    value: <current temperature in ˚C>
+    }
+    
+Bme280.device.parameters[2] = {
+    name: 'humidity',
+    type: 'float',
+    value: <current humidity in %RH>
+    }
+```
+
+
+### Get individual parameter values by index
+Asynchronously:
+```
+bme280.valueAtIndex(index, (err, value) => {
+    if (!err) {
+        val = value;
     }
 });
 ```
+Synchronously:
+```
+val = bme280.getValueAtIndexSync(index);
+// returns NaN if upon error
+```
+
+### Setting the device mode
+```
+bme280.setMode(mode)
+```
+Valid mode strings are _sleep_, _forced_, or _normal_.
+
+
+### Startup time
+The constructor initializes the hardware device, but this takes some time. Usually less than 50ms is required for startup, and during this time other operations will fail.  Therefore, it is a best practice to check 'deviceActive()' returns true before initiating any measurement.
+
+
+### Reset
+The device is reset on startup, and it is not normally necessary to reset the device after this time.  However, a function has been provided:
+```
+bme280.reset()
+```
+Will reset the device, and initialize. Normal startup time delay applies.
+
 
 ### Operation Notes
-This driver is specific to the BME280 pressure, temperature, and humidity sensor manufactured by Bosch. This **is NOT**
-for the similar BMP280 and will not work with that.
+This driver is specific to the BME280 pressure, temperature, and humidity sensor manufactured by Bosch. This **is NOT** for the similar BMP280 and will not work with that.
 
-It will output pressure in hPa (hectopascal, equal to millibar), temperature in °C, and humidity in percentage relative humidity %RH.
-The measured pressure range is from 300hPa to 1100hPa, while the measured temperature range is from -40°C to +85°C.
+It will output pressure in hPa (hectopascal, equal to millibar), temperature in °C, and humidity in percentage relative humidity %RH. The measured pressure range is from 300hPa to 1100hPa, while the measured temperature range is from -40°C to +85°C.
 
-Atmospheric pressure is directly related to elevation (altitude), so this software compensates for elevation and
-reports the result as if the sensor were at sea level. This removes the effect of station elevation on the reported
-pressure. For this reason it is very important to specify the station elevation (metres) in the addon constructor.  Failure
-to specify elevation will default to 0, thus returning "none" or a wildly inaccurate pressure value for elevations
-above sea level.
+Atmospheric pressure is directly related to elevation (altitude), so this software compensates for elevation and reports the result as if the sensor were at sea level. This removes the effect of station elevation on the reported pressure. For this reason it is very important to specify the station elevation (metres) in the addon constructor.  Failure to specify elevation will default to 0, thus returning wildly inaccurate pressure value for elevations above sea level.
 
-It is expected that this sensor will be used on the surface of the earth, subjected to the normal variations of
-pressure caused by weather and air movements.  As such, any pressure results outside the extreme record variations
-encounted on the planet will be discarded as anomalies (1090 mbar < p < 850 mbar).  An anomalous reading is returned
-as "none".  Note that failure to supply a valid elevation may result in an anomalous reading, thereby returning
-"none" even when the sensor and driver are working properly.
+Certain device operational parameters have been hardcoded into the driver. These were chosen to be most useful for a weather station application. They include x4 sampling, x4 filtering, and a normal mode standby of 250ms.
 
 ### Improvements Roadmap
 This driver is missing several features which could improve its functionality.  These are planned for future releases:
 1. Allow SPI interface, since the hardware supports both I2C and SPI
-2. Support operational modes "Sleep" and "Forced Read" (on demand read, rather than cycled read/sleep)
-3. Ability to select parameter fluctuation filtering coefficients
+2. Ability to select sampling, filtering, and standby time in the options
 4. Altimeter function
 
 ### Dependencies
-* node-gyp is used to configure and build the driver
+* i2c-bus is used to communicate with the device on the i2c bus
 
 
 ### Copyright
@@ -113,4 +155,3 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-

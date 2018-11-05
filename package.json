@@ -1,24 +1,42 @@
 {
   "name": "@agilatech/bme280",
   "version": "0.8.2",
-  "description": "Driver for the BME280 Pressure/Temperature/Humidity Sensor",
-  "main": "./build/Release/bme280",
-  "gypfile": true,
+  "description": "A driver for the Bosch BME280 Pressure / Temperature / Humidity sensor",
+  "main": "bme280.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
   "scripts": {
-    "install": "node-gyp rebuild"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Agilatech/bme280.git"
+    "url": "git+https://github.com/AgilatechSystems/bme280.git"
   },
   "keywords": [
-    "Bosch",
+    "bme280",
     "BME280",
-    "Barometric",
-    "Pressure",
-    "Temperature",
-    "Humidity"
+    "sensor",
+    "temperature",
+    "pressure",
+    "humidity",
+    "barometer",
+    "raspberry",
+    "beaglebone",
+    "pi"
   ],
-  "author": "Scott Erholm <scott@agilatech.com>",
-  "license": "MIT"
+  "author": "scotty <scott@agilatech.com> (http://agilatech.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AgilatechSystems/bme280/issues"
+  },
+  "homepage": "https://github.com/AgilatechSystems/bme280#readme",
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0"
+  },
+  "dependencies": {
+    "i2c-bus": "^4.0.5"
+  }
 }
