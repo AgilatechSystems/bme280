@@ -1,9 +1,12 @@
 
 const driver = require('../bme280');
 
-var hardware = new driver({elevation: 1750, mode: 'normal'});
+var hardware = new driver({elevation: 1750, mode: 'normal', bus: 2});
 
 const startup = function() {
+    // give er three tries
+    var tries = 0;
+
     // takes just a bit of time to startup
     var waiting = setTimeout(function wait() {
         if (hardware.deviceActive()) {
@@ -11,7 +14,15 @@ const startup = function() {
             test();
         }
         else {
-            waiting = setTimeout(wait, 100);
+            tries++;
+            if (tries > 3) {
+                clearTimeout(waiting);
+                console.log("Device did not activate");
+                process.exit(1);
+            }
+            else {
+                waiting = setTimeout(wait, 100);
+            }
         }
     }, 100);
 }

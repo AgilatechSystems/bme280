@@ -37,6 +37,6 @@
     "mocha": "^5.2.0"
   },
   "dependencies": {
-    "i2c-bus": "^4.0.5"
+    "i2c-bus": "^4.0.7"
   }
 }

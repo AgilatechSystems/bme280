@@ -29,6 +29,9 @@ module.exports = class Bme280 {
             if (!err) {
                 this.device.active = true;
             }
+            else {
+                this.logError(err);
+            }
         });
     }
 
@@ -36,11 +39,15 @@ module.exports = class Bme280 {
 
         this.loadConstants();
 
-        const chipId = this.bus.readByteSync(this.device.addr, this.register.CHIPID);
-
-        if (chipId !== this.constant.CHIP_ID) {
-            this.logError(`Unexpected chip ID ${chipID.toString(16)}`);
-            return false;
+        var tryCount = 0;
+        while (!this.readChipId()) {
+            await this.sleep(50);
+            tryCount++;
+            this.logError(`No valid chip ID response on register ${this.register.CHIPID}`);
+            if (tryCount > 3) {
+                cb(`Could not initialize device on bus ${this.device.bus} at address ${this.device.addr}`);
+                return;
+            }
         }
 
         // reset the device using soft-reset
@@ -61,6 +68,21 @@ module.exports = class Bme280 {
         cb();
     }
 
+    readChipId() {
+        try {
+            const chipId = this.bus.readByteSync(this.device.addr, this.register.CHIPID);
+            if (chipId !== this.constant.CHIP_ID) {
+                this.logError(`Unexpected chip ID ${chipID.toString(16)}`);
+                return false;
+            }
+
+            return true;
+        }
+        catch (err) {
+            return false;
+        }
+    }
+
     reset() {
         this.device.active = false;
         this.isStale = true;
@@ -75,6 +97,9 @@ module.exports = class Bme280 {
             if (!err) {
                 this.device.active = true;
             }
+            else {
+                this.logError(err);
+            }
         });
     }
 
@@ -88,13 +113,20 @@ module.exports = class Bme280 {
             return;
         }
 
-        const ctrl_meas = (this.sampling.X4 << 5) | (this.sampling.X4 << 3) | this.mode[this.device.mode];
-        this.bus.writeByteSync(this.device.addr, this.register.CONTROL, ctrl_meas);
+        // supress the UnhandledPromise warnings
+        try {
+            const ctrl_meas = (this.sampling.X4 << 5) | (this.sampling.X4 << 3) | this.mode[this.device.mode];
+            this.bus.writeByteSync(this.device.addr, this.register.CONTROL, ctrl_meas);
 
-        // wait until measurement has been completed, 
-        // otherwise we would read the values from the last measurement
-        while (this.bus.readByteSync(this.device.addr, this.register.STATUS) & 0b1000) {
-            await this.sleep(1);
+            // wait until measurement has been completed, 
+            // otherwise we would read the values from the last measurement
+            while (this.bus.readByteSync(this.device.addr, this.register.STATUS) & 0b1000) {
+                await this.sleep(1);
+            }
+        }
+        catch (e) {
+            // not going to do anything about this
+            this.logError('Did not setMode successfully');
         }
     }
 
@@ -134,10 +166,13 @@ module.exports = class Bme280 {
         // no need to fetch all parameters from the device every single time someone
         // wants to access a single value.  So check to see if the data is stale...
         else if (this.isStale) {
-            this.resetStaleTimer();
             this.getDataFromDevice((err) => {
                 if (!err) {
+                    this.resetStaleTimer();
                     callback(null, this.device.parameters[idx].value);
+                }
+                else {
+                    callback(err, NaN);
                 }
             });
         }
@@ -226,7 +261,7 @@ module.exports = class Bme280 {
             this.device.parameters[0].value = Math.round(p * 100) / 100;
         }
         else {
-            this.device.parameters[0].value = 0; // uh oh, we must be in deep space
+            this.device.parameters[0].value = NaN; // uh oh, we must be in deep space
         }
     }
 
