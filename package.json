@@ -1,14 +1,14 @@
 {
   "name": "@agilatech/bme280",
   "version": "0.10.0",
-  "description": "A driver for the Bosch BME280 Pressure / Temperature / Humidity sensor",
+  "description": "Use either I2C or SPI to drive the Bosch BME280 Pressure / Temperature / Humidity sensor",
   "main": "bme280.js",
   "directories": {
     "example": "examples",
     "test": "test"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --exit"
   },
   "repository": {
     "type": "git",
@@ -16,15 +16,20 @@
   },
   "keywords": [
     "bme280",
-    "BME280",
     "sensor",
     "temperature",
     "pressure",
     "humidity",
     "barometer",
-    "raspberry",
+    "iot",
+    "i2c",
+    "spi",
     "beaglebone",
-    "pi"
+    "raspi",
+    "rpi",
+    "raspberry",
+    "pi",
+    "linux"
   ],
   "author": "scotty <scott@agilatech.com> (http://agilatech.com)",
   "license": "MIT",
@@ -37,6 +42,8 @@
     "mocha": "^5.2.0"
   },
   "dependencies": {
-    "i2c-bus": "^4.0.7"
+    "i2c-bus": "*",
+    "spi-device": "*",
+    "onoff": "*"
   }
 }

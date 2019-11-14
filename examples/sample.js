@@ -1,7 +1,18 @@
 
 const driver = require('../bme280');
 
-var hardware = new driver({elevation: 1750, mode: 'normal', bus: 2});
+// for i2c interface, simply remove the 'device' and 'interface' options
+// and make sure the bus is the correct one. (Your elevation is prolly different too)
+const options = {
+    name: 'env_sensor_0',
+    elevation: 1750, 
+    mode: 'normal', 
+    bus: 1, 
+    device: 0, 
+    interface: 'spi'
+};
+
+const hardware = new driver(options);
 
 const startup = function() {
     // give er three tries
@@ -31,18 +42,10 @@ const test = function() {
 
     console.log("\nStarting test ...");
 
-    hardware.getDataFromDevice((err) => {
-        if (!err) {
-            console.log("\nReceived callback from getDataFromDevice. device object:");
-            console.log(hardware.device);
-        }
-    });
-
     var output = {
         data: {
             names: [],
-            types: [],
-            values: []
+            types: []
         }
     }
 
@@ -54,16 +57,24 @@ const test = function() {
     for (var i = 0; i < hardware.deviceNumValues(); i++) {
         output.data.names.push(hardware.nameAtIndex(i));
         output.data.types.push(hardware.typeAtIndex(i));
-        output.data.values.push(hardware.valueAtIndexSync(i));
     }
 
-    console.log("\nData retrieval via valueAtIndexSync method:");
+    hardware.getDataFromDevice().then(() => {
+        console.log("\nReceived callback from getDataFromDevice. device object: ");
+        console.log(hardware.device);
+        console.log("\n");        
+    }).catch(err => {
+	    console.log(err);
+    });
+
+    console.log("\nDevice and parameter info:");
     console.log(JSON.stringify(output, null, 2));
 
-    console.log("\nGet each value asynchronously:");
     for (var i = 0; i < hardware.deviceNumValues(); i++) {
-        hardware.valueAtIndex(i, function(err, val) {
-            console.log(`Asynchronous call return ${i}: ${val}`);
+        hardware.valueAtIndex(i).then( val => {
+            console.log(`Asynchronous call return: ${val}`);
+        }).catch(err => {
+            console.log(`Error : ${err}`);
         });
     }
 

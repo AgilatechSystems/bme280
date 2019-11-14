@@ -6,7 +6,9 @@ var Bme280;
 describe('BME280', function() {
   before(function(done) {
     
-    Bme280 = new bme280();
+    //Bme280 = new bme280(); // i2c bus 1, addr 0x76, sea level
+    Bme280 = new bme280({bus: 2, elevation: 1000}); // i2c bus 2, 1000m (3,300 ft) above sea level
+    //Bme280 = new bme280({interface: 'spi', bus: 1, device: 0}); // spi bus 1.0
 
     // takes just a wee bit of time to startup
     var waiting = setTimeout(function wait() {
@@ -48,10 +50,9 @@ describe('BME280', function() {
     }
   });
 
-  it ('should asynchronously get data from the sensor device without error', function(done) {
-    Bme280.getDataFromDevice(function(err) {
-      if (err) done (err);
-      else done();
+  it ('should asynchronously get data from the sensor device without error', function() {
+    Bme280.getDataFromDevice().then(function() {
+      expect();
     });
   });
 
@@ -67,92 +68,49 @@ describe('BME280', function() {
     expect(Bme280.device.parameters[2].value).to.be.within(0, 100);
   });
 
-  it ('should synchronously get data from the sensor device without error', function() {
-    Bme280.getDataFromDeviceSync();
-    expect(Bme280.device.parameters[0].value).to.be.within(300, 1100);
-    expect(Bme280.device.parameters[1].value).to.be.within(-40, 85);
-    expect(Bme280.device.parameters[2].value).to.be.within(0, 100);
-  });
-
-  it ('should asyncronously collect pressure value', function(done){
-    Bme280.valueAtIndex(0, function(err, value) {
-      if (err) {
-        done(err);
-      }
-      else {
-        expect(value).to.be.within(300, 1100);
-        done();
-      }
+  it ('should asyncronously collect pressure value', function() {
+    Bme280.valueAtIndex(0).then(function(val) {
+      expect(val).to.be.within(300, 1100);
     });
   });
 
-  it ('should asyncronously collect temperature value', function(done){
-    Bme280.valueAtIndex(1, function(err, value) {
-      if (err) {
-        done(err);
-      }
-      else {
-        expect(value).to.be.within(-40, 85);
-        done();
-      }
+  it ('should asyncronously collect temperature value', function() {
+    Bme280.valueAtIndex(1).then(function(val) {
+      expect(val).to.be.within(-40, 85);
     });
   });
 
-  it ('should asyncronously collect humidity value', function(done){
-    Bme280.valueAtIndex(2, function(err, value) {
-      if (err) {
-        done(err);
-      }
-      else {
-        expect(value).to.be.within(0, 100);
-        done();
-      }
+  it ('should asyncronously collect humidity value', function() {
+    Bme280.valueAtIndex(2).then(function(val) {
+      expect(val).to.be.within(0, 100);
     });
   });
 
-  it ('should synchronously collect pressure value', function() {
-    expect(Bme280.valueAtIndexSync(0)).to.be.within(300, 1100);
-  });
-
-  it ('should synchronously collect temperature value', function() {
-    expect(Bme280.device.parameters[1].value).to.be.within(-40, 85);
-  });
-
-  it ('should synchronously collect humidity value', function() {
-    expect(Bme280.device.parameters[2].value).to.be.within(0, 100);
-  });
-
-  it ('should asyncronously error if an out-of-bounds index is requested', function(done) {
-    Bme280.valueAtIndex(4, function(err, value) {
-      if (err) {
-        done();
-      }
-      else {
-        done('Error: out-of-bounds index was not rejected');
-      }
+  it ('should asyncronously error if an out-of-bounds index is requested', function() {
+    Bme280.valueAtIndex(4).then(function(val) {
+      expect();
+    }).catch(function(err) {
+      expect(err).to.equal('Bme280 Error: index 4 out of range');
     });
-  })
-
-  it ('should synchronously error if an out-of-bounds index is requested', function(){
-    expect(Bme280.valueAtIndexSync(-1)).to.be.NaN;
-  }); 
+  });
 
   it ('should be able to set the device mode to normal', function() {
     Bme280.setMode('normal');
     expect(Bme280.device.mode).to.be.equal('normal');
   });
 
-  it ('should adjust barometric pressure according to elevation', function() {
-    const seaLevelPressure = Bme280.valueAtIndexSync(0);
+  it ('should adjust barometric pressure according to elevation', async function() {
+    const seaLevelPressure = await Bme280.valueAtIndex(0);
 
     // have to artificially make the current values stale
     Bme280.isStale = true;
 
-    // and now make us jump 1000 meters and take a new reading
-    Bme280.device.elevation = 1000;
-    const elevationPressure = Bme280.valueAtIndexSync(0);
+    // and now make us jump 1500 meters and take a new reading
+    Bme280.device.elevation = 1500;
+    const elevationPressure = await Bme280.valueAtIndex(0);
 
     // the pressure is always asjusted higher for an elevation
     expect(seaLevelPressure).to.be.lessThan(elevationPressure);
   });
+
 });
