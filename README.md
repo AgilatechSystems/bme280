@@ -17,7 +17,7 @@ const bme280 = new Bme280();
 // creates an driver with all default options, including i2c-1 bus at 0x76 address, 
 // and forced mode at sea level operation
 
-if (bme280.isActive()) {
+if (bme280.deviceActive()) {
     bme280.getDataFromDevice().then(() => {
         const pressure    = bme280.device.parameters[0].value;
         const tempurature = bme280.device.parameters[1].value;
