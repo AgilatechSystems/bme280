@@ -155,7 +155,7 @@ module.exports = class Bme280 {
       // wait until measurement has been completed, 
       // otherwise we would read the values from the last measurement
       while ((await this._readRegister(this.register.STATUS)) && 0b1000) {
-        await this._sleep(4);
+        await this._sleep(80);
       }
     }).catch(err => {
       this._logError(`Could not set mode ${newMode}`);
