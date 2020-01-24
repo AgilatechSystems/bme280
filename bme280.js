@@ -154,7 +154,7 @@ module.exports = class Bme280 {
     this._writeRegister(this.register.CONTROL, ctrl_meas).then(async () => {
       // wait until measurement has been completed, 
       // otherwise we would read the values from the last measurement
-      while ((await this._readRegister(this.register.STATUS)) & 0b1000) {
+      while ((await this._readRegister(this.register.STATUS) & 0b1000) !== 0) {
         await this._sleep(4);
       }
     }).catch(err => {
