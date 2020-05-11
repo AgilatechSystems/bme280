@@ -1,6 +1,6 @@
 {
   "name": "@agilatech/bme280",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Use either I2C or SPI to drive the Bosch BME280 Pressure / Temperature / Humidity sensor",
   "main": "bme280.js",
   "directories": {
