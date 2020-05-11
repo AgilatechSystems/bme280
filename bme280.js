@@ -72,7 +72,7 @@ module.exports = class Bme280 {
 
   getDataFromDevice() {
 
-    return new Promise( (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       if (!this.device.active) {
         reject("Device not active");
       }
@@ -80,7 +80,7 @@ module.exports = class Bme280 {
       // the device is sleeping if it is in either sleep or forced mode, so we need
       // to wake it up before a measurement is taken by selecting forced mode
       if ((this.device.mode === 'sleep') || (this.device.mode === 'forced')) {
-        this.setMode('forced');
+        await this.setMode('forced');
       }
 
       // read the entire data block at once and pry out the values as we need them
@@ -154,7 +154,7 @@ module.exports = class Bme280 {
     this._writeRegister(this.register.CONTROL, ctrl_meas).then(async () => {
       // wait until measurement has been completed, 
       // otherwise we would read the values from the last measurement
-      while ((await this._readRegister(this.register.STATUS)) && 0b1000) {
+      while ((await this._readRegister(this.register.STATUS) & 0b1000) !== 0) {
         await this._sleep(4);
       }
     }).catch(err => {
