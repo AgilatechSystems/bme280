@@ -39,7 +39,7 @@
   "homepage": "https://github.com/AgilatechSystems/bme280#readme",
   "devDependencies": {
     "chai": "^4.2.0",
-    "mocha": "^5.2.0"
+    "mocha": "^11.7.5"
   },
   "dependencies": {
     "i2c-bus": "*",
